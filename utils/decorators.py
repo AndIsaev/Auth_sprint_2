@@ -23,7 +23,7 @@ def requires_basic_auth(f):
     def decorated(*args, **kwargs):
         # NOTE: This example will require Basic Auth only when you run the
         # app directly. For unit tests, we can't block it from getting the
-        # Swagger specs so we just allow it to go thru without user.
+        # Swagger specs so we just allow it to go thru without auth.
         # The following two lines of code wouldn't be needed in a normal
         # production environment.
         if __name__ != "__main__":

@@ -1,3 +1,4 @@
+
 """Initial migration.
 
 Revision ID: 94fe1abd9fe6
