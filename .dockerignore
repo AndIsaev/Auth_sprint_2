@@ -1,0 +1,5 @@
+.pytest_cache
+docker-compose.yml
+README.md
+.gitignore
+.env.example
