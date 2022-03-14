@@ -7,6 +7,10 @@ class AbstractCache(ABC):
         self.cache = cache_instance
 
     @abstractmethod
+    def get(self, key: str, **kwargs):
+        pass
+
+    @abstractmethod
     def add_token(self, key: str, expire: int, value: Union[bytes, str]):
         pass
 
@@ -28,4 +32,8 @@ class AbstractCache(ABC):
 
     @abstractmethod
     async def close(self):
+        pass
+
+    @abstractmethod
+    def pipeline(self, **kwargs):
         pass

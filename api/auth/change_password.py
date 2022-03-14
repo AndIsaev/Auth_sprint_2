@@ -15,6 +15,7 @@ parser.add_argument(
 
 
 class ChangePassword(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def post(self):

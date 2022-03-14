@@ -73,7 +73,21 @@ swagger = Swagger(
         "produces": [
             "application/json",
         ],
+        'securityDefinitions': {
+            'Bearer': {
+                'type': 'apiKey',
+                'name': 'Authorization',
+                'in': 'header',
+                'description': 'JWT Authorization header using the Bearer scheme. Example: \'Authorization: Bearer {token}\''
+            }
+        },
+        'security': [
+            {
+                'Bearer': []
+            }
+        ]
     },
+
 )
 
 app.config["SQLALCHEMY_DATABASE_URI"]: str = db_url

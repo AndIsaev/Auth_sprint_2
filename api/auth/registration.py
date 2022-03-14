@@ -7,6 +7,7 @@ from models import Role, User, UserRole
 from utils import constants
 from utils.decorators import api_response_wrapper
 from utils.validators import username_validation
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -14,6 +15,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "password", type=str, help="This field cannot be blank", required=True, trim=True
+)
+parser.add_argument(
+    "email", type=str, help="This field cannot be blank", required=True, trim=True
 )
 parser.add_argument(
     "password_confirm",
@@ -25,6 +29,7 @@ parser.add_argument(
 
 
 class UserRegistration(Resource):
+    @rate_limit()
     @api_response_wrapper()
     def post(self):
         """
@@ -41,6 +46,7 @@ class UserRegistration(Resource):
                 - username
                 - password
                 - password_confirm
+                - email
               properties:
                 username:
                   type: string
@@ -54,6 +60,10 @@ class UserRegistration(Resource):
                   type: string
                   description: Password confirmation
                   default: "Qwerty123"
+                email:
+                  type: string
+                  description: The user's email.
+                  default: "mail@mail.ru"
         responses:
           201:
             description: Message that user was created
@@ -102,7 +112,9 @@ class UserRegistration(Resource):
         data = parser.parse_args()
         username: str = data.get("username")
         password: str = data.get("password")
+        email: str = data.get("email")
         password_confirm: str = data.get("password_confirm")
+        print('--112--дошли и отдали', email, username)
         """ check username in DB """
         if User.find_by_username(username=username):
             return {
@@ -112,6 +124,7 @@ class UserRegistration(Resource):
                 ],
             }, http.HTTPStatus.BAD_REQUEST
         """ check that passwords are equal """
+        print('--122--дошли и отдали', email, username)
         if password != password_confirm:
             return {
                 "message": "wrong data",
@@ -123,6 +136,7 @@ class UserRegistration(Resource):
         """ create new user """
         new_user = User(username=username_validation(value=username))
         new_user.set_password(password=password)
+        new_user.email = email
         db.session.add(new_user)
         """ find default role """
         default_role = Role.find_by_role_name(

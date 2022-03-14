@@ -12,6 +12,7 @@ from db import cache, db
 from models import User
 from models.auth_models import SuccessHistory
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument("username", help="This field cannot be blank", required=True)
@@ -19,6 +20,7 @@ parser.add_argument("password", help="This field cannot be blank", required=True
 
 
 class UserLogin(Resource):
+    @rate_limit()
     @api_response_wrapper()
     def post(self):
         """
@@ -104,9 +106,23 @@ class UserLogin(Resource):
                 key=jti, expire=config.JWT_REFRESH_TOKEN_EXPIRES, value=current_user.id
             )
             """ save history """
+            user_agent = request.user_agent.string
+            ip_address = request.remote_addr
+            check_platform = request.user_agent.platform
+            browser = request.user_agent.browser
+            platform = 'other'
+            if check_platform:
+                if 'windows' in check_platform.lower():
+                    platform = 'windows'
+                elif 'linux' in check_platform.lower():
+                    platform = 'linux'
             history = SuccessHistory(
                 user_id=current_user.id,
-                description=f"устройство: {request.user_agent.string}\nдата входа: {datetime.now()}"
+                description=f"устройство: {user_agent}\nдата входа: {datetime.now()}",
+                ip_address=ip_address,
+                user_agent=user_agent,
+                platform=platform,
+                browser=browser
             )
             db.session.add(history)
             db.session.commit()
