@@ -21,7 +21,7 @@ class User(CreatedUpgradeTimeMixin):
         db.String(length=constants.USERNAME_MAX_LENGTH), nullable=False, unique=True
     )
     password = db.Column(db.String(length=256), nullable=False)
-    email = db.Column(db.String(length=64), nullable=True)
+    email = db.Column(db.String(length=255), nullable=False, unique=True)
 
     def __repr__(self) -> str:
         return f"<Username: {self.username}>"
