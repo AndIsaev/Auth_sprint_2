@@ -38,11 +38,13 @@ def google(provider: str):
 
 @app.route("/auth/<provider>")
 def provider_auth(provider: str):
-    print(request.args.to_dict().get("email"))
+    # print(request.data)
+    # print(request.args)
+    # print(request.args.to_dict().get("email"))
     from core.oauth_settings.base import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)
-    user = provider_oauth.get_profile_data()
+    user = provider_oauth.get_profile_data(request=request)
     return f"{user}"
 
 
@@ -71,7 +73,21 @@ swagger = Swagger(
         "produces": [
             "application/json",
         ],
+        'securityDefinitions': {
+            'Bearer': {
+                'type': 'apiKey',
+                'name': 'Authorization',
+                'in': 'header',
+                'description': 'JWT Authorization header using the Bearer scheme. Example: \'Authorization: Bearer {token}\''
+            }
+        },
+        'security': [
+            {
+                'Bearer': []
+            }
+        ]
     },
+
 )
 
 app.config["SQLALCHEMY_DATABASE_URI"]: str = db_url

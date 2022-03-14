@@ -1,8 +1,12 @@
-import json
+from calendar import c
 import os
+from re import S
+
+from requests.auth import HTTPBasicAuth
+import requests
 
 from dotenv import load_dotenv
-from flask import redirect, request, session, url_for
+from flask import url_for
 
 from app import oauth
 
@@ -20,8 +24,8 @@ OAUTH_CREDENTIALS: dict[str, dict[str, str]] = {
     "vk": {"id": os.getenv("VK_ID"), "secret": os.getenv("VK_SECRET")},
     "yandex": {"id": os.getenv("YANDEX_ID"), "secret": os.getenv("YANDEX_SECRET")},
     "mail": {
-        "id": os.getenv("FACEBOOK_APP_ID"),
-        "secret": os.getenv("FACEBOOK_APP_ID"),
+        "id": os.getenv("MAIL_ID"),
+        "secret": os.getenv("MAIL_SECRET"),
     },
     "google": {
         "id": os.getenv("GOOGLE_CLIENT_ID"),
@@ -42,7 +46,7 @@ class OAuthSignIn(object):
     def get_redirect_url(self):
         pass
 
-    def get_profile_data(self):
+    def get_profile_data(self, request=None):
         pass
 
     @classmethod
@@ -76,12 +80,13 @@ class FacebookSignIn(OAuthSignIn):
         )
         return self.service.authorize_redirect(redirect_uri=redirect_uri)
 
-    def get_profile_data(self):
+    def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
         resp = self.service.get(
             "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
         )
-        return resp.json()
+        user = resp.json()
+        return user
 
 
 class GoogleSignIn(OAuthSignIn):
@@ -101,9 +106,12 @@ class GoogleSignIn(OAuthSignIn):
         )
         return self.service.authorize_redirect(redirect_uri=redirect_uri)
 
-    def get_profile_data(self):
+    def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
         user = self.service.parse_id_token(token=token)
+
+
+
         return user
 
 
@@ -117,13 +125,13 @@ class VKSignIn(OAuthSignIn):
             access_token_params=None,
             authorize_url="https://oauth.vk.com/authorize",
             authorize_params=None,
-            display='page',
+            display="page",
             response_type="code",
             # client_kwargs={"scope": "email"},
-            scope='email',
-            base_url='https://api.vk.com/method/',
+            scope="email",
+            base_url="https://api.vk.com/method/",
             request_token_url=None,
-            access_token_url='https://oauth.vk.com/access_token',
+            access_token_url="https://oauth.vk.com/access_token",
         )
 
     def get_redirect_url(self) -> str:
@@ -132,41 +140,62 @@ class VKSignIn(OAuthSignIn):
         )
         return self.service.authorize_redirect(redirect_uri=redirect_uri)
 
-    def get_profile_data(self):
+    def get_profile_data(self, request=None):
 
         # resp = self.service.get(
         #     "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
         # )
         # print(resp.json())
-        return 'test'
+        return "test"
 
 
-class SignIn(OAuthSignIn):
+class MailSignIn(OAuthSignIn):
     def __init__(self):
-        super(VKSignIn, self).__init__(provider_name="vk")
+        super(MailSignIn, self).__init__(provider_name="mail")
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
             access_token_params=None,
-            authorize_url="https://oauth.vk.com/authorize",
+            authorize_url="https://oauth.mail.ru/login",
             authorize_params=None,
-            display='page',
-            response_type="code",
-            # client_kwargs={"scope": "email"},
-            scope='email',
-            base_url='https://api.vk.com/method/',
-            request_token_url=None,
-            access_token_url='https://oauth.vk.com/access_token',
+            response_type="token",
+            scope='userinfo',
         )
 
     def get_redirect_url(self) -> str:
         redirect_uri: str = url_for(
             "provider_auth", _external=True, provider=self.provider_name
         )
+        print(redirect_uri)
         return self.service.authorize_redirect(redirect_uri=redirect_uri)
 
-    def get_profile_data(self):
+    def get_profile_data(self, request=None):
+        # token = self.service.authorize_access_token()
+        # print(token)
+        print(request.data)
+        print(request.args)
+        code: str = request.args.get("code")
+        print(code)
+        """ authorize in mail """
+        mail_response = requests.post(
+            url="https://oauth.mail.ru/token",
+            params={"client_id": self.client_id, "client_secret": self.client_secret},
+            data={
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": "http://localhost:5000/auth/mail"
+            }
+        )
+        access_token: str = mail_response.json().get("access_token")
+        print(access_token)
+        """ get user's info """
+        user_info_response = requests.get(
+            url="https://oauth.mail.ru/userinfo",
+            params={"access_token": access_token}
+        )
+        print(user_info_response.json())
+        demo_data: dict = {'nickname': 'Бернар Бердикул', 'client_id': '7e5f4707292443fca607873f9f545752', 'id': '1734604429', 'image': 'https://filin.mail.ru/pic?d=-B4YYVzU7KpFhQxz0p1xQ2jGf2hc-VbER21vH7dV-OQteB3PDmmLxgU2MIzWIeJducomlZY~&width=180&height=180', 'first_name': 'Бернар', 'email': 'bernar.berdikul@mail.ru', 'locale': 'ru_RU', 'name': 'Бернар Бердикул', 'last_name': 'Бердикул', 'birthday': '22.04.2000', 'gender': 'm'}
 
         # resp = self.service.get(
         #     "https://graph.facebook.com/me?fields=id,name,email,picture{url}"

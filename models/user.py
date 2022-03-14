@@ -21,11 +21,14 @@ class User(CreatedUpgradeTimeMixin):
         db.String(length=constants.USERNAME_MAX_LENGTH), nullable=False, unique=True
     )
     password = db.Column(db.String(length=256), nullable=False)
-    social_id = db.Column(db.String(length=64), nullable=True, unique=True)
-    email = db.Column(db.String(length=64), nullable=True)
+    email = db.Column(db.String(length=255), nullable=False, unique=True)
 
     def __repr__(self) -> str:
         return f"<Username: {self.username}>"
+
+    @classmethod
+    def find_by_email(cls, email: str):
+        return cls.query.filter_by(email=email).first()
 
     @classmethod
     def find_by_username(cls, username: str):

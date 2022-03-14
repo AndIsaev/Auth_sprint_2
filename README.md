@@ -1,13 +1,13 @@
-### Как запустить проект 
+### Как запустить проект
 
 **Склонируйте проект:**
 ```commandline
-https://github.com/AndIsaev/Auth_sprint_1.git
+https://github.com/AndIsaev/Auth_sprint_2.git
 ```
 
-**На одном уровне с папкой проекта "./Auth_sprint_1" создайте папку "./postgres_data" монтирования к образу Postgres**
+**На одном уровне с папкой проекта "./Auth_sprint_2" создайте папку "./postgres_data" монтирования к образу Postgres**
 
-![result_dirs](https://github.com/AndIsaev/Auth_sprint_1/blob/main/documentation/dirs.jpg?raw=true)
+![result_dirs](https://github.com/AndIsaev/Auth_sprint_2/blob/main/documentation/dirs.jpg?raw=true)
 
 **Для запуска проекта следует скопировать файл .env.example и переименовать на .env**
 ```commandline
@@ -106,4 +106,3 @@ Mail.
 ## Партицирование в PostgreSQL
 ### Задание
 Партицируйте таблицу с пользователями. Подумайте, по каким критериям вы бы разделили её. Важно посмотреть на таблицу не только в текущем времени, но и заглядывая в некое будущее, когда в ней будут миллионы записей. Пользователи могут быть из одной страны, но из разных регионов. А еще пользователи могут использовать разные устройства для входа и иметь разные возрастные ограничения.
-
