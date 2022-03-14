@@ -6,6 +6,7 @@ from flask_restful import Resource, reqparse
 from db import db
 from models import User
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument("password", help="This field cannot be blank", required=True)
