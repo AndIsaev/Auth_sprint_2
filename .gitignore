@@ -48,6 +48,7 @@ ENV/
 # intellij ide
 ../.idea/
 *.iml
+.vscode/
 
 # auto generated docs
 doc.html

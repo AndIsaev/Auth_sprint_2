@@ -1,5 +1,6 @@
 import http
 from datetime import datetime
+from re import U
 from typing import Any, Union
 
 import jwt
@@ -9,7 +10,7 @@ from flask_restful import Resource, reqparse
 
 from core import config
 from db import cache, db
-from models import SuccessHistory, User
+from models import SuccessHistory, User, Role, UserRole
 from utils.decorators import api_response_wrapper
 
 parser = reqparse.RequestParser()
@@ -92,8 +93,9 @@ class UserLogin(Resource):
             }, http.HTTPStatus.NOT_FOUND
 
         if current_user.check_password(password=data.get("password")):
-            acc_token: str = create_access_token(identity=current_user.id)
-            ref_token: str = create_refresh_token(identity=current_user.id)
+            additional_claims: dict[str, list] = {"roles": [i.role.name for i in current_user.user_roles]}
+            acc_token: str = create_access_token(identity=current_user.id, additional_claims=additional_claims)
+            ref_token: str = create_refresh_token(identity=current_user.id, additional_claims=additional_claims)
             """ "put refresh token in REDIS" """
             jti: Union[str, Any] = jwt.decode(
                 jwt=ref_token, key=config.JWT_SECRET_KEY, algorithms="HS256"
@@ -109,7 +111,6 @@ class UserLogin(Resource):
             )
             db.session.add(history)
             db.session.commit()
-
             return {
                 "message": f"Logged in as {current_user.username}",
                 "access_token": acc_token,

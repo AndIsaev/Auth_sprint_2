@@ -4,12 +4,17 @@ from db import db
 from models.mixins import CreatedUpgradeTimeMixin
 from utils.decorators import param_error_handler
 
+from models import Role, User
+
 
 class UserRole(CreatedUpgradeTimeMixin):
     __tablename__ = "user_role"
 
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
     role_id = db.Column(UUID(as_uuid=True), db.ForeignKey("role.id"), nullable=False)
+
+    user = db.relationship(User, backref=db.backref('user_roles', lazy=True))
+    role = db.relationship(Role, backref=db.backref('user_roles', lazy=True))
 
     __table_args__ = (db.UniqueConstraint("user_id", "role_id", name="user_role_pk"),)
 
