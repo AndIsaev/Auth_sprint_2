@@ -14,7 +14,7 @@ REDIS_PORT: int = int(os.getenv("REDIS_PORT"))
 
 class RedisCache(AbstractCache):
     def get(self, key: str, **kwargs):
-        return self.cache.get(f'{key}')
+        return self.cache.get(f"{key}")
 
     def add_token(self, key: str, expire: int, value: Union[bytes, str]):
         self.cache.setex(name=f"{key}", time=expire, value=f"{value}")

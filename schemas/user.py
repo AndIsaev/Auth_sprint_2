@@ -4,7 +4,7 @@ from models import User
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        fields = ("id", "username")
+        fields = ("id", "username", "email")
         model = User
         load_instance = True
         # include_fk = True

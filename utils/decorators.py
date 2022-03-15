@@ -82,7 +82,9 @@ def api_response_wrapper():
             elif response:
                 data.append(response)
             wrapped_response: dict = {
-                "success": True if str(status_code).startswith("2") else False,
+                "success": True
+                if str(status_code.numerator).startswith("2")
+                else False,
                 "data": data,
             }
             if message:

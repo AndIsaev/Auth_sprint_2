@@ -1,6 +1,7 @@
 DEFAULT_ROLE_FOR_ALL_USERS: str = "simple_user"
 ROLE_FOR_ADMIN: str = "admin"
 
+EMAIL_MAX_LENGTH: int = 64
 USERNAME_MIN_LENGTH: int = 5
 USERNAME_MAX_LENGTH: int = 35
 REGEX_FOR_FIRST_SYMBOL: str = r"^[A-Z]"

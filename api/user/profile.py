@@ -8,10 +8,14 @@ from db import cache, db
 from models import User
 from utils import codes
 from utils.decorators import api_response_wrapper
+from utils.validators import email_validation, username_validation
 
 parser = reqparse.RequestParser()
 parser.add_argument(
-    "username", type=str, help="This field cannot be blank", trim=True, required=True
+    "username", type=str, help="This field cannot be blank", trim=True, required=False
+)
+parser.add_argument(
+    "email", type=str, help="This field cannot be blank", trim=True, required=False
 )
 
 
@@ -139,14 +143,30 @@ class Profile(Resource):
         data = parser.parse_args()
         user_id: str = get_jwt_identity()
         new_username: str = data.get("username")
-        if not new_username:
+        new_email: str = data.get("email")
+        """ Check if nothing need to update """
+        if not new_username and not new_email:
+            return {}, http.HTTPStatus.OK
+        """ check values in database """
+        if new_username and User.find_by_username(
+            username=username_validation(value=new_username)
+        ):
             return {
-                "message": "Something went wrong",
-                "username": "This field cannot be blank",
+                "message": "Unique constraint",
+                "username": "This username already in use",
             }, http.HTTPStatus.BAD_REQUEST
+        if new_email and User.find_by_email(email=email_validation(value=new_email)):
+            return {
+                "message": "Unique constraint",
+                "email": "This email already in use",
+            }, http.HTTPStatus.BAD_REQUEST
+        """ Try update profile """
         try:
             profile = User.query.filter_by(id=user_id).first()
-            profile.username = new_username
+            if new_username:
+                profile.username = new_username
+            if new_email:
+                profile.email = new_email
             profile.save_to_db()
             return user_schema.dump(profile), http.HTTPStatus.OK
         except Exception:
