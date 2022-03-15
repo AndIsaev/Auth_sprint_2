@@ -26,3 +26,10 @@ USERNAME_MIN_INVALID: str = (
 USERNAME_MAX_INVALID: str = (
     f"The username must be less then {constants.USERNAME_MAX_LENGTH} symbols"
 )
+
+
+""" EMAIL validation messages """
+EMAIL_SYMBOLS_INVALID: str = f"The email consist incorrect symbols"
+EMAIL_MAX_INVALID: str = (
+    f"The email must be less then {constants.EMAIL_MAX_LENGTH} symbols"
+)

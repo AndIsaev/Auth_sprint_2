@@ -6,6 +6,41 @@ from flask_restful import abort
 from . import codes, constants, messages
 
 
+def email_validation(value: str) -> str:
+    """
+    Validate an email address.
+    """
+    if "@" not in value:
+        abort(
+            http_status_code=HTTPStatus.BAD_REQUEST,
+            success=False,
+            data=[],
+            message=codes.INVALID_EMAIL_ERROR,
+            errors={"email": messages.EMAIL_SYMBOLS_INVALID},
+        )
+
+    user_part, domain_part = value.rsplit("@", 1)
+
+    if "." not in domain_part:
+        abort(
+            http_status_code=HTTPStatus.BAD_REQUEST,
+            success=False,
+            data=[],
+            message=codes.INVALID_EMAIL_ERROR,
+            errors={"email": messages.EMAIL_SYMBOLS_INVALID},
+        )
+
+    if len(value) > constants.USERNAME_MAX_LENGTH:
+        abort(
+            http_status_code=HTTPStatus.BAD_REQUEST,
+            success=False,
+            data=[],
+            message=codes.INVALID_EMAIL_ERROR,
+            errors={"email": messages.EMAIL_MAX_INVALID},
+        )
+    return value
+
+
 def username_validation(value: str) -> str:
     """Validate username's value for database"""
     """ Check which symbols username contains """

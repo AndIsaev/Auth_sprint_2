@@ -6,7 +6,8 @@ from db import db
 from models import Role, User, UserRole
 from utils import constants
 from utils.decorators import api_response_wrapper
-from utils.validators import username_validation
+from utils.rate_limit import rate_limit
+from utils.validators import email_validation, username_validation
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -14,6 +15,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "password", type=str, help="This field cannot be blank", required=True, trim=True
+)
+parser.add_argument(
+    "email", type=str, help="This field cannot be blank", required=True, trim=True
 )
 parser.add_argument(
     "password_confirm",
@@ -25,6 +29,7 @@ parser.add_argument(
 
 
 class UserRegistration(Resource):
+    @rate_limit()
     @api_response_wrapper()
     def post(self):
         """
@@ -39,6 +44,7 @@ class UserRegistration(Resource):
               id: UserRegistration
               required:
                 - username
+                - email
                 - password
                 - password_confirm
               properties:
@@ -46,6 +52,10 @@ class UserRegistration(Resource):
                   type: string
                   description: The user's username.
                   default: "JohnDoe"
+                email:
+                  type: string
+                  description: The user's email.
+                  default: "mail@mail.ru"
                 password:
                   type: string
                   description: The user's password.
@@ -101,6 +111,7 @@ class UserRegistration(Resource):
         """
         data = parser.parse_args()
         username: str = data.get("username")
+        email: str = data.get("email")
         password: str = data.get("password")
         password_confirm: str = data.get("password_confirm")
         """ check username in DB """
@@ -109,6 +120,14 @@ class UserRegistration(Resource):
                 "message": "wrong data",
                 "errors": [
                     {"username": f"User {username} already exists"},
+                ],
+            }, http.HTTPStatus.BAD_REQUEST
+        """ check email in DB """
+        if User.find_by_email(email=email):
+            return {
+                "message": "wrong data",
+                "errors": [
+                    {"username": f"User's email {email} already exists"},
                 ],
             }, http.HTTPStatus.BAD_REQUEST
         """ check that passwords are equal """
@@ -121,7 +140,10 @@ class UserRegistration(Resource):
                 ],
             }, http.HTTPStatus.BAD_REQUEST
         """ create new user """
-        new_user = User(username=username_validation(value=username))
+        new_user = User(
+            username=username_validation(value=username),
+            email=email_validation(value=email),
+        )
         new_user.set_password(password=password)
         db.session.add(new_user)
         """ find default role """

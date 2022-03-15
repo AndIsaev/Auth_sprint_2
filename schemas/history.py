@@ -10,7 +10,15 @@ class HistorySchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = SuccessHistory
-        fields = ("description", "created_at", "updated_at")
+        fields = (
+            "description",
+            "ip_address",
+            "user_agent",
+            "platform",
+            "browser",
+            "created_at",
+            "updated_at",
+        )
         load_instance = True
         # include_fk = True
 
