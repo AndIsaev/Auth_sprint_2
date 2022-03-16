@@ -10,9 +10,11 @@ from flask_restful import Resource
 
 from db import cache
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 
 class TokenRefresh(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required(refresh=True)
     def post(self):
@@ -59,6 +61,8 @@ class TokenRefresh(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         jti = get_jwt().get("jti")
         user_id: str = get_jwt_identity()

@@ -108,6 +108,8 @@ class UserRegistration(Resource):
                 message:
                   type: string
                   description: Response message
+         429:
+            description: Too many requests. Limit in interval seconds.
         """
         data = parser.parse_args()
         username: str = data.get("username")
