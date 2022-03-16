@@ -9,6 +9,7 @@ from models import User
 from utils import codes
 from utils.decorators import api_response_wrapper
 from utils.validators import email_validation, username_validation
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -20,6 +21,7 @@ parser.add_argument(
 
 
 class Profile(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def get(self):
@@ -68,6 +70,8 @@ class Profile(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.user import user_schema
 
@@ -77,6 +81,7 @@ class Profile(Resource):
             return user_schema.dump(user), http.HTTPStatus.OK
         return {"message": codes.OBJECT_NOT_FOUND}, http.HTTPStatus.NOT_FOUND
 
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def patch(self):
@@ -137,6 +142,8 @@ class Profile(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.user import user_schema
 
@@ -173,6 +180,7 @@ class Profile(Resource):
             db.session.rollback()
             return {"message": "Something went wrong"}, http.HTTPStatus.BAD_REQUEST
 
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def delete(self):
@@ -204,6 +212,8 @@ class Profile(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         jti: str = get_jwt().get("jti")
         user_id: str = get_jwt_identity()

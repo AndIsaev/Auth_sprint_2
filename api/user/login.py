@@ -12,6 +12,7 @@ from core import config
 from db import cache, db
 from models import Role, SuccessHistory, User, UserRole
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument("username", help="This field cannot be blank", required=True)
@@ -19,6 +20,7 @@ parser.add_argument("password", help="This field cannot be blank", required=True
 
 
 class UserLogin(Resource):
+    @rate_limit()
     @api_response_wrapper()
     def post(self):
         """
@@ -83,6 +85,8 @@ class UserLogin(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         data = parser.parse_args()
         username: str = data.get("username", "")

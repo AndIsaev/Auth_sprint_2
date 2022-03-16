@@ -6,9 +6,11 @@ from flask_restful import Resource
 from models import SuccessHistory
 from schemas.history import history_schema
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 
 class AuthHistory(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def get(self) -> tuple[dict[str, str], int]:
@@ -31,6 +33,8 @@ class AuthHistory(Resource):
                   description: Response data
                   items:
                     type: string
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         user_id: str = get_jwt_identity()
         history = SuccessHistory.query.filter_by(user_id=user_id)

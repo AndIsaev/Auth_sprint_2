@@ -6,9 +6,11 @@ from flask_restful import Resource
 from core import config
 from db import cache
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 
 class UserLogoutAccess(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def post(self):
@@ -55,6 +57,8 @@ class UserLogoutAccess(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         jti: str = get_jwt().get("jti")
         user_id: str = get_jwt_identity()
@@ -68,6 +72,7 @@ class UserLogoutAccess(Resource):
 
 
 class UserLogoutRefresh(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required(refresh=True)
     def post(self):
@@ -114,6 +119,8 @@ class UserLogoutRefresh(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         jti: str = get_jwt().get("jti")
         try:
