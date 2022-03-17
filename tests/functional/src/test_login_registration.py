@@ -12,6 +12,7 @@ async def test_success_registration(make_request, access_token):
         headers=access_token,
         data={
             "username": "UserTestUser_1",
+            "email": "UserTestUser_1@mail.ru",
             "password": "CoolPassword!1!",
             "password_confirm": "CoolPassword!1!",
         },

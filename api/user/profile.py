@@ -97,11 +97,16 @@ class Profile(Resource):
               id: Profile
               required:
                 - username
+                - email
               properties:
                 username:
                   type: string
                   description: The user's username.
                   default: "JohnDoe"
+                email:
+                  type: string
+                  description: The user's email.
+                  default: "test@mail.ru"
         responses:
           200:
             description: Success user's login

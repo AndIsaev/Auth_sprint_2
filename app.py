@@ -33,7 +33,6 @@ def google(provider: str):
     from core.oauth_settings import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)
-    print(provider_oauth.get_redirect_url())
     return provider_oauth.get_redirect_url()
 
 
@@ -42,8 +41,7 @@ def provider_auth(provider: str):
     from core.oauth_settings import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)
-    user = provider_oauth.get_profile_data(request=request)
-    return f"{user}"
+    return provider_oauth.get_profile_data(request=request)
 
 
 swagger = Swagger(

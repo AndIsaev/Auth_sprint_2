@@ -106,25 +106,24 @@ class UserLogin(Resource):
             ref_token: str = create_refresh_token(
                 identity=current_user.id, additional_claims=additional_claims
             )
-            """ "put refresh token in REDIS" """
+            # put refresh token in REDIS
             jti: Union[str, Any] = jwt.decode(
                 jwt=ref_token, key=config.JWT_SECRET_KEY, algorithms="HS256"
             ).get("jti")
-            """ add refresh token in black list """
+            # add refresh token in black list
             cache.add_token(
                 key=jti, expire=config.JWT_REFRESH_TOKEN_EXPIRES, value=current_user.id
             )
-            """ save history """
+            # save history
             user_agent = request.user_agent.string
             ip_address = request.remote_addr
             check_platform = request.user_agent.platform
             browser = request.user_agent.browser
             platform = "other"
-            if check_platform:
-                if "windows" in check_platform.lower():
-                    platform = "windows"
-                elif "linux" in check_platform.lower():
-                    platform = "linux"
+            if check_platform and "windows" in check_platform.lower():
+                platform = "windows"
+            elif check_platform and "linux" in check_platform.lower():
+                platform = "linux"
             history = SuccessHistory(
                 user_id=current_user.id,
                 description=f"устройство: {user_agent}\nдата входа: {datetime.now()}",

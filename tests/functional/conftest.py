@@ -84,6 +84,7 @@ def app():
     db.init_app(app=test_app)
 
     test_username: str = "UserTestUser"
+    test_email: str = "UserTestUser@mail.ru"
     test_password: str = "CoolPassword!1!"
 
     with test_app.app_context():
@@ -92,7 +93,7 @@ def app():
         db.session.remove()
         db.drop_all()
         db.create_all()
-        user = User(username=test_username)
+        user = User(username=test_username, email=test_email)
         user.set_password(password=test_password)
         user.save_to_db()
 
@@ -112,9 +113,10 @@ def app():
 @pytest.fixture
 async def user():
     test_username: str = "Test_243f"
+    test_email: str = "Test_243f@mail.ru"
     test_password: str = "Test!12345"
 
-    user = User(username=test_username)
+    user = User(username=test_username, email=test_email)
     user.set_password(password=test_password)
     user.save_to_db()
     yield user
