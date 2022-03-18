@@ -2,12 +2,11 @@ import http
 
 from flask_restful import Resource, reqparse
 
-from db import db
-from models import Role, User, UserRole
-from utils import constants
+from models import User
 from utils.decorators import api_response_wrapper
 from utils.rate_limit import rate_limit
-from utils.validators import email_validation, username_validation
+
+from .registration_service import create_new_user
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -141,19 +140,5 @@ class UserRegistration(Resource):
                     {"password_confirm": "passwords are not equal"},
                 ],
             }, http.HTTPStatus.BAD_REQUEST
-        """ create new user """
-        new_user = User(
-            username=username_validation(value=username),
-            email=email_validation(value=email),
-        )
-        new_user.set_password(password=password)
-        db.session.add(new_user)
-        """ find default role """
-        default_role = Role.find_by_role_name(
-            role_name=constants.DEFAULT_ROLE_FOR_ALL_USERS
-        )
-        """ set default role for user """
-        new_user_role = UserRole(user_id=new_user.id, role_id=default_role.id)
-        db.session.add(new_user_role)
-        db.session.commit()
+        create_new_user(username=username, email=email, password=password)
         return {"message": f"User {username} was created"}, http.HTTPStatus.CREATED

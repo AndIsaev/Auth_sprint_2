@@ -8,8 +8,8 @@ from db import cache, db
 from models import User
 from utils import codes
 from utils.decorators import api_response_wrapper
-from utils.validators import email_validation, username_validation
 from utils.rate_limit import rate_limit
+from utils.validators import email_validation, username_validation
 
 parser = reqparse.RequestParser()
 parser.add_argument(

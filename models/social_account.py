@@ -24,5 +24,11 @@ class SocialAccount(CreatedUpgradeTimeMixin):
         db.UniqueConstraint("social_id", "social_name", name="social_pk"),
     )
 
+    @classmethod
+    def raw_exists(cls, user_id: str, social_id: str, social_name: str):
+        return cls.query.filter_by(
+            user_id=user_id, social_id=social_id, social_name=social_name
+        ).first()
+
     def __repr__(self) -> str:
         return f"<SocialAccount {self.social_name}:{self.user_id}>"

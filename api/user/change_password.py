@@ -9,6 +9,9 @@ from utils.decorators import api_response_wrapper
 from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
+parser.add_argument(
+    "current_password", help="This field cannot be blank", required=True
+)
 parser.add_argument("password", help="This field cannot be blank", required=True)
 parser.add_argument(
     "password_confirm", help="This field cannot be blank", required=True
@@ -31,17 +34,22 @@ class ChangePassword(Resource):
             schema:
               id: ChangePassword
               required:
+                - current_password
                 - password
                 - password_confirm
               properties:
+                current_password:
+                  type: string
+                  desctription: The user's current password
+                  default: "Qwerty123"
                 password:
                   type: string
                   description: The user's password.
-                  default: "Qwerty123"
+                  default: "Qwerty_updated123"
                 password_confirm:
                   type: string
                   description: Password confirmation
-                  default: "Qwerty123"
+                  default: "Qwerty_updated123"
         responses:
           200:
             description: Message that user was created
@@ -90,9 +98,19 @@ class ChangePassword(Resource):
             description: Too many requests. Limit in interval seconds.
         """
         data = parser.parse_args()
+        current_password: str = data.get("current_password")
         password: str = data.get("password")
         password_confirm: str = data.get("password_confirm")
-        """ check that passwords are equal """
+        # check that current password and new password not equal
+        if current_password == password:
+            return {
+                "message": "wrong data",
+                "errors": [
+                    {"current_password": "passwords are equal"},
+                    {"password": "passwords are equal"},
+                ],
+            }, http.HTTPStatus.BAD_REQUEST
+        # check that passwords are equal
         if password != password_confirm:
             return {
                 "message": "wrong data",
@@ -100,10 +118,18 @@ class ChangePassword(Resource):
                     {"password": "passwords are not equal"},
                     {"password_confirm": "passwords are not equal"},
                 ],
-            }, 400
-        user_id: str = get_jwt_identity()
+            }, http.HTTPStatus.BAD_REQUEST
+        # get current user
+        current_user = User.query.filter_by(id=get_jwt_identity()).first()
+        # compair current_password with password in DB
+        if not current_user.check_password(password=current_password):
+            return {
+                "message": "wrong data",
+                "errors": [
+                    {"current_password": "incorrect password"},
+                ],
+            }, http.HTTPStatus.BAD_REQUEST
         try:
-            current_user = User.query.filter_by(id=user_id).first()
             current_user.set_password(password=password)
             current_user.save_to_db()
             return {

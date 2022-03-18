@@ -25,7 +25,7 @@ async def test_success_login(make_request):
         endpoint="/login",
         http_method="post",
         data={
-            "username": "UserTestUser",
+            "email": "UserTestUser@mail.ru",
             "password": "CoolPassword!1!",
         },
     )

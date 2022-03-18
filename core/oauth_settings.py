@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import url_for
 
 from app import oauth
+from utils.decorators import remote_oauth_api_error_handler
 
 from .oauth_service import register_social_account
 
@@ -40,7 +41,6 @@ class OAuthSignIn(object):
         self.service = None
 
     def get_redirect_url(self) -> str:
-        print(self.service)
         redirect_uri: str = url_for(
             "provider_auth", _external=True, provider=self.provider_name
         )
@@ -72,7 +72,8 @@ class FacebookSignIn(OAuthSignIn):
             client_kwargs={"scope": "email"},
         )
 
-    def get_profile_data(self, request=None) -> dict:
+    @remote_oauth_api_error_handler
+    def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
         user_info_response = self.service.get(
             "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
@@ -82,6 +83,7 @@ class FacebookSignIn(OAuthSignIn):
         email: str = user_info_response.get("email")
         username: str = user_info_response.get("name")
         return register_social_account(
+            request=request,
             social_name=self.provider_name,
             social_id=social_id,
             email=email,
@@ -100,7 +102,8 @@ class GoogleSignIn(OAuthSignIn):
             client_kwargs={"scope": "openid email profile"},
         )
 
-    def get_profile_data(self, request=None) -> dict:
+    @remote_oauth_api_error_handler
+    def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
         user_info_response = self.service.parse_id_token(token=token)
         # get user's info
@@ -108,6 +111,7 @@ class GoogleSignIn(OAuthSignIn):
         email: str = user_info_response.get("email")
         username: str = user_info_response.get("name")
         return register_social_account(
+            request=request,
             social_name=self.provider_name,
             social_id=social_id,
             email=email,
@@ -127,7 +131,8 @@ class VKSignIn(OAuthSignIn):
             base_url="https://api.vk.com/method/",
         )
 
-    def get_profile_data(self, request=None) -> dict:
+    @remote_oauth_api_error_handler
+    def get_profile_data(self, request=None):
         code: str = request.args.get("code")
         # authorize in vk
         vk_response = requests.get(
@@ -141,10 +146,11 @@ class VKSignIn(OAuthSignIn):
             },
         ).json()
         # get user's info
-        social_id: str = vk_response.get("user_id")
+        social_id: str = f"{vk_response.get('user_id')}"
         email: str = vk_response.get("email")
         username: str = f"{self.provider_name}-{social_id}"
         return register_social_account(
+            request=request,
             social_name=self.provider_name,
             social_id=social_id,
             email=email,
@@ -164,7 +170,8 @@ class MailSignIn(OAuthSignIn):
             scope="userinfo",
         )
 
-    def get_profile_data(self, request=None) -> dict:
+    @remote_oauth_api_error_handler
+    def get_profile_data(self, request=None):
         code: str = request.args.get("code")
         # authorize in mail
         mail_response = requests.post(
@@ -185,6 +192,7 @@ class MailSignIn(OAuthSignIn):
         email: str = user_info_response.get("email")
         username: str = user_info_response.get("nickname")
         return register_social_account(
+            request=request,
             social_name=self.provider_name,
             social_id=social_id,
             email=email,
@@ -205,6 +213,7 @@ class YandexSignIn(OAuthSignIn):
             scope="login:info login:email",
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         code: str = request.args.get("code")
         # authorize in yandex
@@ -231,6 +240,7 @@ class YandexSignIn(OAuthSignIn):
         email: str = user_info_response.get("default_email")
         username: str = user_info_response.get("login")
         return register_social_account(
+            request=request,
             social_name=self.provider_name,
             social_id=social_id,
             email=email,

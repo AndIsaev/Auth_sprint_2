@@ -6,6 +6,7 @@ from flask_restful import Resource, reqparse
 from core.permissions import is_admin_permissions
 from models import Role
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -14,6 +15,7 @@ parser.add_argument(
 
 
 class RoleCreate(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     @is_admin_permissions()
@@ -88,6 +90,8 @@ class RoleCreate(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.role import role_schema
 
