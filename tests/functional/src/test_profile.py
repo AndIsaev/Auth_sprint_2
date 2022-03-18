@@ -22,17 +22,18 @@ async def test_success_authorized_patch_profile(user, make_request, access_token
         endpoint="/me/users",
         http_method="patch",
         headers=access_token,
-        data={"username": "Lord"},
+        data={"username": "Changed_name", "email": "Changed_name@mail.ru"},
     )
     assert response.status == http.HTTPStatus.OK
-    assert response.body.get("data")[0].get("username") == "Lord"
+    assert response.body.get("data")[0].get("username") == "Changed_name"
+    assert response.body.get("data")[0].get("email") == "Changed_name@mail.ru"
 
 
 async def test_unsuccessful_authorized_patch_profile(make_request, access_token):
     response = await make_request(
         endpoint="/me/users", http_method="patch", headers=access_token
     )
-    assert response.status == http.HTTPStatus.BAD_REQUEST
+    assert response.status == http.HTTPStatus.OK
 
 
 async def test_authorized_delete_profile(make_request, access_token):

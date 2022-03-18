@@ -294,7 +294,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"BERNS\",\r\n    \"password\": \"Qwerty123\",\r\n    \"password_confirm\": \"Qwerty123\"\r\n}",
+							"raw": "{\r\n    \"username\": \"BERNS\",\r\n    \"email\": \"pr_zoom@mail.ru\",\r\n    \"password\": \"Qwerty123\",\r\n    \"password_confirm\": \"Qwerty123\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -330,7 +330,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"password\": \"Qwerty123\",\r\n    \"password_confirm\": \"Qwerty123\"\r\n}",
+							"raw": "{\r\n    \"current_password\": \"Qwerty123\",\r\n    \"password\": \"Qwerty1234\",\r\n    \"password_confirm\": \"Qwerty1234\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -350,7 +350,7 @@
 					"response": []
 				},
 				{
-					"name": "access history",
+					"name": "auth history",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -365,12 +365,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{LOCAL_URL}}/access_history",
+							"raw": "{{LOCAL_URL}}/auth_history",
 							"host": [
 								"{{LOCAL_URL}}"
 							],
 							"path": [
-								"access_history"
+								"auth_history"
 							]
 						}
 					},
@@ -393,7 +393,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"BERNS\",\r\n    \"password\": \"Qwerty123\"\r\n}",
+							"raw": "{\r\n    \"email\": \"pr_zoom@mail.ru\",\r\n    \"password\": \"Qwerty123\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -541,7 +541,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"BERNS2\"\r\n}",
+							"raw": "{\r\n    \"username\": \"BERNS2\",\r\n    \"email\": \"bernar.berdikul@mail.ru\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"

@@ -43,24 +43,7 @@ def email_validation(value: str) -> str:
 
 def username_validation(value: str) -> str:
     """Validate username's value for database"""
-    """ Check which symbols username contains """
-    if not re.match(constants.REGEX_FOR_FIRST_SYMBOL, value):
-        abort(
-            http_status_code=HTTPStatus.BAD_REQUEST,
-            success=False,
-            data=[],
-            message=codes.INVALID_USERNAME_ERROR,
-            errors={"username": messages.USERNAME_FIRST_SYMBOL},
-        )
-    if not re.match(constants.REGEX_FOR_LOGIN, value):
-        abort(
-            http_status_code=HTTPStatus.BAD_REQUEST,
-            success=False,
-            data=[],
-            message=codes.INVALID_USERNAME_ERROR,
-            errors={"username": messages.USERNAME_OTHER_SYMBOLS},
-        )
-    """ Check username's length """
+    # Check username's length
     if len(value) < constants.USERNAME_MIN_LENGTH:
         abort(
             http_status_code=HTTPStatus.BAD_REQUEST,
@@ -77,13 +60,13 @@ def username_validation(value: str) -> str:
             message=codes.INVALID_USERNAME_ERROR,
             errors={"username": messages.USERNAME_MAX_INVALID},
         )
-    """ Return validated username """
+    # Return validated username
     return value
 
 
 def password_validation(value: str) -> str:
     """Validate password's value for database"""
-    """ Check which symbols password contains """
+    # Check which symbols password contains
     if re.match(constants.REGEX_ALPHABET_IN_PASSWORD, value):
         if not re.findall(constants.REGEX_UPPER_LATTER_IN_PASSWORD, value):
             abort(
@@ -117,7 +100,7 @@ def password_validation(value: str) -> str:
             message=codes.INVALID_PASSWORD_ERROR,
             errors={"password": messages.PASSWORD_ALPHABET},
         )
-    """ Check password's length """
+    # Check password's length
     if len(value) < constants.PASSWORD_MIN_LENGTH:
         abort(
             http_status_code=HTTPStatus.BAD_REQUEST,
@@ -134,5 +117,5 @@ def password_validation(value: str) -> str:
             message=codes.INVALID_PASSWORD_ERROR,
             errors={"password": messages.PASSWORD_MAX_LENGTH},
         )
-    """ Return validated password """
+    # Return validated password
     return value

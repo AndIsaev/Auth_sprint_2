@@ -3,9 +3,11 @@ from flask_restful import Resource
 
 from models import Role
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 
 class RoleList(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def get(self) -> dict:
@@ -72,6 +74,8 @@ class RoleList(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.role import roles_schema
 

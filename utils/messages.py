@@ -14,12 +14,6 @@ PASSWORD_ALPHABET: str = "Please, use only latin letters, numbers and signs '!#?
 
 
 """ Username validation messages """
-USERNAME_FIRST_SYMBOL: str = (
-    "The first character must be letter in UPPER case of the English alphabet"
-)
-USERNAME_OTHER_SYMBOLS: str = (
-    "Username must consist of English alphabet, numbers or underscore '_'"
-)
 USERNAME_MIN_INVALID: str = (
     f"The username can't be less then {constants.USERNAME_MIN_LENGTH} symbols"
 )

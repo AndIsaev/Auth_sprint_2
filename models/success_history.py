@@ -30,7 +30,9 @@ class SuccessHistory(CreatedUpgradeTimeMixin):
         },
     )
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    id = db.Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"))
     description = db.Column(db.String(length=500), nullable=False)
     ip_address = db.Column(db.String(100))
