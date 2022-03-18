@@ -18,6 +18,16 @@ from models import Role, User, UserRole
 from utils import constants
 from utils.decorators import requires_basic_auth
 
+from opentelemetry import trace
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+)
+
+
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 api = Api(app=app)
@@ -27,13 +37,22 @@ oauth = OAuth(app)
 oauth.init_app(app)
 jwt = JWTManager(app)
 
+trace.set_tracer_provider(TracerProvider())
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(ConsoleSpanExporter())
+)
+
+FlaskInstrumentor().instrument_app(app)
+RequestsInstrumentor().instrument()
+
+tracer = trace.get_tracer(__name__)
+
 
 @app.route("/login/<provider>/")
 def google(provider: str):
     from core.oauth_settings import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)
-    print(provider_oauth.get_redirect_url())
     return provider_oauth.get_redirect_url()
 
 
@@ -61,7 +80,8 @@ swagger = Swagger(
                 "type": "apiKey",
                 "name": "Authorization",
                 "in": "header",
-                "description": 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+                "description": 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {'
+                               'token}"',
             }
         },
         "security": [{"Bearer": []}],
@@ -189,7 +209,7 @@ def create_app(flask_app):
     app.register_blueprint(api_bp_user)
     app.register_blueprint(api_bp_role)
     app.register_blueprint(api_bp_user_role)
-    flask_app.run(debug=True)
+    flask_app.run(debug=True, use_reloader=False)
     # flask_app.run(debug=True, host="0.0.0.0")
 
 

@@ -1,6 +1,5 @@
 import http
 from datetime import datetime
-from re import U
 from typing import Any, Union
 
 import jwt
@@ -10,7 +9,7 @@ from flask_restful import Resource, reqparse
 
 from core import config
 from db import cache, db
-from models import Role, SuccessHistory, User, UserRole
+from models import SuccessHistory, User
 from utils.decorators import api_response_wrapper
 from utils.rate_limit import rate_limit
 
