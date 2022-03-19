@@ -12,16 +12,15 @@ def rate_limit(limit=1000, interval=60):
     If the user has exceeded the limit, then return the response 429.
     """
 
-    def rate_limit_decorator(f):
-        @wraps(f)
+    def rate_limit_decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             key: str = f"Limit::{request.remote_addr}:{datetime.datetime.now().minute}"
             current_request_count = cache.get(key=key)
 
             if current_request_count and int(current_request_count) >= limit:
                 return {
-                    "message": f"Too many requests. "
-                    f"Limit {limit} in {interval} seconds",
+                    "message": f"Too many requests. Limit {limit} in {interval} seconds",
                 }, HTTPStatus.TOO_MANY_REQUESTS
 
             else:
@@ -30,7 +29,7 @@ def rate_limit(limit=1000, interval=60):
                 pipe.expire(key, interval + 1)
                 pipe.execute()
 
-                return f(*args, **kwargs)
+                return func(*args, **kwargs)
 
         return wrapper
 

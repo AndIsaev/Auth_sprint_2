@@ -7,6 +7,7 @@ from core.permissions import is_admin_permissions
 from db import db
 from models import Role
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -23,6 +24,7 @@ def return_or_abort_if_role_not_exist(role_id: str) -> Role:
 
 
 class RoleDetail(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def get(self, role_id):
@@ -86,12 +88,15 @@ class RoleDetail(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.role import role_schema
 
         role = return_or_abort_if_role_not_exist(role_id=role_id)
         return role_schema.dump(role), http.HTTPStatus.OK
 
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     @is_admin_permissions()
@@ -165,6 +170,8 @@ class RoleDetail(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         from schemas.role import role_schema
 
@@ -179,6 +186,7 @@ class RoleDetail(Resource):
             role.save_to_db()
             return role_schema.dump(role), http.HTTPStatus.OK
 
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     @is_admin_permissions()
@@ -212,6 +220,8 @@ class RoleDetail(Resource):
                 message:
                   type: string
                   description: Response message
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         role = return_or_abort_if_role_not_exist(role_id=role_id)
         if role:

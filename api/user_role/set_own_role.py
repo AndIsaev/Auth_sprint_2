@@ -6,6 +6,7 @@ from flask_restful import Resource, reqparse
 from core import config
 from models import UserRole
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -17,6 +18,7 @@ parser.add_argument(
 class SetOwnUserRole(Resource):
     """For debug method to get role"""
 
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     def post(self):

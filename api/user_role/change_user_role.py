@@ -4,6 +4,7 @@ from flask_restful import Resource, reqparse
 from core.permissions import is_admin_permissions
 from models import UserRole
 from utils.decorators import api_response_wrapper
+from utils.rate_limit import rate_limit
 
 parser = reqparse.RequestParser()
 parser.add_argument(
@@ -15,6 +16,7 @@ parser.add_argument(
 
 
 class ChangeUserRole(Resource):
+    @rate_limit()
     @api_response_wrapper()
     @jwt_required()
     @is_admin_permissions()
@@ -56,6 +58,8 @@ class ChangeUserRole(Resource):
                   items:
                       type: object
                   default: []
+          429:
+            description: Too many requests. Limit in interval seconds.
         """
         data = parser.parse_args()
         user_id: str = data.get("user_id")

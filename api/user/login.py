@@ -1,20 +1,16 @@
 import http
-from datetime import datetime
-from typing import Any, Union
 
-import jwt
 from flask import request
-from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_restful import Resource, reqparse
 
-from core import config
-from db import cache, db
-from models import SuccessHistory, User
+from models import User
 from utils.decorators import api_response_wrapper
 from utils.rate_limit import rate_limit
 
+from .login_service import generate_jwt_tokens
+
 parser = reqparse.RequestParser()
-parser.add_argument("username", help="This field cannot be blank", required=True)
+parser.add_argument("email", help="This field cannot be blank", required=True)
 parser.add_argument("password", help="This field cannot be blank", required=True)
 
 
@@ -33,13 +29,13 @@ class UserLogin(Resource):
             schema:
               id: UserLogin
               required:
-                - username
+                - email
                 - password
               properties:
-                username:
+                email:
                   type: string
-                  description: The user's username.
-                  default: "JohnDoe"
+                  description: The user's email.
+                  default: "JohnDoe@mail.ru"
                 password:
                   type: string
                   description: The user's password.
@@ -88,55 +84,18 @@ class UserLogin(Resource):
             description: Too many requests. Limit in interval seconds.
         """
         data = parser.parse_args()
-        username: str = data.get("username", "")
-        current_user = User.find_by_username(username=username)
+        email: str = data.get("email")
+        current_user = User.find_by_email(email=email)
         if not current_user:
-            return {
-                "message": f"User {data.get('username')} doesn't exist"
-            }, http.HTTPStatus.NOT_FOUND
+            return {"message": f"User {email} doesn't exist"}, http.HTTPStatus.NOT_FOUND
 
         if current_user.check_password(password=data.get("password")):
-            additional_claims: dict[str, list] = {
-                "roles": [i.role.name for i in current_user.user_roles]
-            }
-            acc_token: str = create_access_token(
-                identity=current_user.id, additional_claims=additional_claims
+            jwt_tokens: dict[str, str] = generate_jwt_tokens(
+                current_user=current_user, request=request
             )
-            ref_token: str = create_refresh_token(
-                identity=current_user.id, additional_claims=additional_claims
-            )
-            """ "put refresh token in REDIS" """
-            jti: Union[str, Any] = jwt.decode(
-                jwt=ref_token, key=config.JWT_SECRET_KEY, algorithms="HS256"
-            ).get("jti")
-            """ add refresh token in black list """
-            cache.add_token(
-                key=jti, expire=config.JWT_REFRESH_TOKEN_EXPIRES, value=current_user.id
-            )
-            """ save history """
-            user_agent = request.user_agent.string
-            ip_address = request.remote_addr
-            check_platform = request.user_agent.platform
-            browser = request.user_agent.browser
-            platform = "other"
-            if check_platform:
-                if "windows" in check_platform.lower():
-                    platform = "windows"
-                elif "linux" in check_platform.lower():
-                    platform = "linux"
-            history = SuccessHistory(
-                user_id=current_user.id,
-                description=f"устройство: {user_agent}\nдата входа: {datetime.now()}",
-                ip_address=ip_address,
-                user_agent=user_agent,
-                platform=platform,
-                browser=browser,
-            )
-            db.session.add(history)
-            db.session.commit()
             return {
                 "message": f"Logged in as {current_user.username}",
-                "access_token": acc_token,
-                "refresh_token": ref_token,
+                "access_token": jwt_tokens.get("access_token"),
+                "refresh_token": jwt_tokens.get("refresh_token"),
             }, http.HTTPStatus.OK
         return {"message": "Wrong credentials"}, http.HTTPStatus.BAD_REQUEST

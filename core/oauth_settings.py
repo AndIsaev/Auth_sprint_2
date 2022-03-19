@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from flask import url_for
 
 from app import oauth
+from utils.decorators import remote_oauth_api_error_handler
+
+from .oauth_service import register_social_account
 
 load_dotenv()
 
@@ -13,10 +16,6 @@ OAUTH_CREDENTIALS: dict[str, dict[str, str]] = {
     "facebook": {
         "id": os.getenv("FACEBOOK_APP_ID"),
         "secret": os.getenv("FACEBOOK_APP_SECRET"),
-    },
-    "twitter": {
-        "id": os.getenv("FACEBOOK_APP_ID"),
-        "secret": os.getenv("FACEBOOK_APP_ID"),
     },
     "vk": {"id": os.getenv("VK_ID"), "secret": os.getenv("VK_SECRET")},
     "yandex": {"id": os.getenv("YANDEX_ID"), "secret": os.getenv("YANDEX_SECRET")},
@@ -42,7 +41,6 @@ class OAuthSignIn(object):
         self.service = None
 
     def get_redirect_url(self) -> str:
-        print(self.service)
         redirect_uri: str = url_for(
             "provider_auth", _external=True, provider=self.provider_name
         )
@@ -69,20 +67,28 @@ class FacebookSignIn(OAuthSignIn):
             client_id=self.client_id,
             client_secret=self.client_secret,
             access_token_url="https://graph.facebook.com/oauth/access_token",
-            access_token_params=None,
             authorize_url="https://www.facebook.com/dialog/oauth",
-            authorize_params=None,
             api_base_url="https://graph.facebook.com/",
             client_kwargs={"scope": "email"},
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
-        resp = self.service.get(
+        user_info_response = self.service.get(
             "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
+        ).json()
+        # get user's info
+        social_id: str = user_info_response.get("id")
+        email: str = user_info_response.get("email")
+        username: str = user_info_response.get("name")
+        return register_social_account(
+            request=request,
+            social_name=self.provider_name,
+            social_id=social_id,
+            email=email,
+            username=username,
         )
-        user = resp.json()
-        return user
 
 
 class GoogleSignIn(OAuthSignIn):
@@ -96,10 +102,21 @@ class GoogleSignIn(OAuthSignIn):
             client_kwargs={"scope": "openid email profile"},
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
-        user = self.service.parse_id_token(token=token)
-        return user
+        user_info_response = self.service.parse_id_token(token=token)
+        # get user's info
+        social_id: str = user_info_response.get("sub")
+        email: str = user_info_response.get("email")
+        username: str = user_info_response.get("name")
+        return register_social_account(
+            request=request,
+            social_name=self.provider_name,
+            social_id=social_id,
+            email=email,
+            username=username,
+        )
 
 
 class VKSignIn(OAuthSignIn):
@@ -110,17 +127,14 @@ class VKSignIn(OAuthSignIn):
             client_id=self.client_id,
             client_secret=self.client_secret,
             authorize_url="https://oauth.vk.com/authorize",
-            # display="page",
-            # response_type="code",
             scope="email",
             base_url="https://api.vk.com/method/",
-            # access_token_url="https://oauth.vk.com/access_token",
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         code: str = request.args.get("code")
-        print(code)
-        """ authorize in mail """
+        # authorize in vk
         vk_response = requests.get(
             url="https://oauth.vk.com/access_token",
             params={
@@ -130,21 +144,18 @@ class VKSignIn(OAuthSignIn):
                 "fields": "email",
                 "code": code,
             },
+        ).json()
+        # get user's info
+        social_id: str = f"{vk_response.get('user_id')}"
+        email: str = vk_response.get("email")
+        username: str = f"{self.provider_name}-{social_id}"
+        return register_social_account(
+            request=request,
+            social_name=self.provider_name,
+            social_id=social_id,
+            email=email,
+            username=username,
         )
-        print(vk_response.json())
-        email: str = vk_response.json().get("email")
-        user_id: int = vk_response.json().get("user_id")
-        """ get user's info """
-        # user_info_response = requests.get(
-        #     url="https://api.vk.com/method/users.get", params={
-        #         "user_id": user_id,
-        #         "access_token": access_token,
-        #         "fields": "email",
-        #         "v": 5.131
-        #     }
-        # )
-        # print(user_info_response.json())
-        return "test"
 
 
 class MailSignIn(OAuthSignIn):
@@ -154,17 +165,15 @@ class MailSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            access_token_params=None,
             authorize_url="https://oauth.mail.ru/login",
-            authorize_params=None,
             response_type="code",
             scope="userinfo",
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         code: str = request.args.get("code")
-        print(code)
-        """ authorize in mail """
+        # authorize in mail
         mail_response = requests.post(
             url="https://oauth.mail.ru/token",
             params={"client_id": self.client_id, "client_secret": self.client_secret},
@@ -173,34 +182,22 @@ class MailSignIn(OAuthSignIn):
                 "grant_type": "authorization_code",
                 "redirect_uri": "http://localhost:5000/auth/mail",
             },
-        )
-        access_token: str = mail_response.json().get("access_token")
-        print(access_token)
-        """ get user's info """
+        ).json()
+        access_token: str = mail_response.get("access_token")
         user_info_response = requests.get(
             url="https://oauth.mail.ru/userinfo", params={"access_token": access_token}
+        ).json()
+        # get user's info
+        social_id: str = user_info_response.get("id")
+        email: str = user_info_response.get("email")
+        username: str = user_info_response.get("nickname")
+        return register_social_account(
+            request=request,
+            social_name=self.provider_name,
+            social_id=social_id,
+            email=email,
+            username=username,
         )
-        print(user_info_response.json())
-        """ example data """
-        demo_data: dict = {
-            "nickname": "Бернар Бердикул",
-            "client_id": "7e5f4707292443fca607873f9f545752",
-            "id": "1734604429",
-            "image": "https://filin.mail.ru/pic?d=-B4YYVzU7KpFhQxz0p1xQ2jGf2hc-VbER21vH7dV-OQteB3PDmmLxgU2MIzWIeJducomlZY~&width=180&height=180",
-            "first_name": "Бернар",
-            "email": "bernar.berdikul@mail.ru",
-            "locale": "ru_RU",
-            "name": "Бернар Бердикул",
-            "last_name": "Бердикул",
-            "birthday": "22.04.2000",
-            "gender": "m",
-        }
-
-        # resp = self.service.get(
-        #     "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
-        # )
-        # print(resp.json())
-        return "test"
 
 
 class YandexSignIn(OAuthSignIn):
@@ -210,15 +207,42 @@ class YandexSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            access_token_params=None,
             authorize_url="https://oauth.yandex.ru/authorize",
-            authorize_params=None,
             response_type="code",
             display="popup",
-            scope="login:email",
+            scope="login:info login:email",
         )
 
+    @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         code: str = request.args.get("code")
-        print(code)
-        return "test"
+        # authorize in yandex
+        yandex_response = requests.post(
+            url="https://oauth.yandex.ru/token",
+            data={
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "code": code,
+                "grant_type": "authorization_code",
+            },
+        ).json()
+        access_token: str = yandex_response.get("access_token")
+        user_info_response = requests.get(
+            url="https://login.yandex.ru/info",
+            params={
+                "format": "json",
+                "with_openid_identity": 1,
+                "oauth_token": access_token,
+            },
+        ).json()
+        # get user's info
+        social_id: str = user_info_response.get("id")
+        email: str = user_info_response.get("default_email")
+        username: str = user_info_response.get("login")
+        return register_social_account(
+            request=request,
+            social_name=self.provider_name,
+            social_id=social_id,
+            email=email,
+            username=username,
+        )

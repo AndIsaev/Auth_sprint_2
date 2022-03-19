@@ -1,25 +1,43 @@
 import http
 from functools import wraps
-from typing import Optional
+from typing import Optional, Union
 
 from flask import Response, request
 from flask_restful import abort
 
 
-def requires_basic_auth(f):
+def remote_oauth_api_error_handler(func):
+    """Decorator to catch remote oauth service's api errors"""
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            message: dict[str, Union[str, list]] = {
+                "message": "Oauth error",
+                "description": "Try another social network or try again later...",
+                "errors": [],
+            }
+            abort(http_status_code=http.HTTPStatus.BAD_REQUEST, message=message)
+
+    return inner
+
+
+def requires_basic_auth(func):
     """Decorator to require HTTP Basic Auth for your endpoint."""
 
-    def check_auth(username, password):
+    def check_auth(username: str, password: str):
         return username == "guest" and password == "secret"
 
     def authenticate():
         return Response(
             "Authentication required.",
-            401,
+            http.HTTPStatus.UNAUTHORIZED,
             {"WWW-Authenticate": "Basic realm='Login Required'"},
         )
 
-    @wraps(f)
+    @wraps(func)
     def decorated(*args, **kwargs):
         # NOTE: This example will require Basic Auth only when you run the
         # app directly. For unit tests, we can't block it from getting the
@@ -30,9 +48,9 @@ def requires_basic_auth(f):
             return f(*args, **kwargs)
 
         auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
+        if not auth or not check_auth(username=auth.username, passqord=auth.password):
             return authenticate()
-        return f(*args, **kwargs)
+        return func(*args, **kwargs)
 
     return decorated
 
@@ -43,8 +61,8 @@ def param_error_handler():
         def inner(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception:
-                message: dict = {
+            except Exception as e:
+                message: dict[str, Union[str, list]] = {
                     "message": "Wrong params",
                     "description": "Check that you send correct data",
                     "errors": [],
@@ -81,7 +99,7 @@ def api_response_wrapper():
                 data = response
             elif response:
                 data.append(response)
-            wrapped_response: dict = {
+            wrapped_response: dict[str, Union[str, list, bool]] = {
                 "success": True
                 if str(status_code.numerator).startswith("2")
                 else False,
