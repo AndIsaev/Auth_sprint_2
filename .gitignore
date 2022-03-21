@@ -58,3 +58,4 @@ db.sqlite3
 static/
 media/
 .pytest_cache
+postgres_data/

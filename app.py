@@ -208,8 +208,8 @@ def create_app(flask_app):
     app.register_blueprint(api_bp_user)
     app.register_blueprint(api_bp_role)
     app.register_blueprint(api_bp_user_role)
-    flask_app.run(debug=True, use_reloader=False)
-    # flask_app.run(debug=True, host="0.0.0.0")
+    # flask_app.run(debug=True, use_reloader=False)
+    flask_app.run(debug=True, host="0.0.0.0")
 
 
 if __name__ == "__main__":
