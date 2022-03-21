@@ -17,6 +17,7 @@ from db import cache, db, db_url
 from models import Role, User, UserRole
 from utils import constants
 from utils.decorators import requires_basic_auth
+from utils.rate_limit import rate_limit
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -28,16 +29,72 @@ oauth.init_app(app)
 jwt = JWTManager(app)
 
 
+@rate_limit()
 @app.route("/login/<provider>/")
 def google(provider: str):
+    """
+        Retdirect user for internal oauth service of social network
+        ---
+        tags:
+          - oauth
+        parameters:
+          - in: path
+            name: provider
+            required: true
+            description: The social network's name
+            type: string
+        responses:
+          302:
+            description: Redirecting for oauth service of social network
+          429:
+            description: Too many requests. Limit in interval seconds.
+    """
     from core.oauth_settings import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)
     return provider_oauth.get_redirect_url()
 
 
+@rate_limit()
 @app.route("/auth/<provider>")
 def provider_auth(provider: str):
+    """
+        Retdirect user for internal oauth service of social network
+        ---
+        tags:
+          - oauth
+        parameters:
+          - in: path
+            name: provider
+            required: true
+            description: The social network's name
+            type: string
+        responses:
+          200:
+            description: Redirecting for oauth service of social network
+            schema:
+              properties:
+                success:
+                  type: boolean
+                  description: Response status
+                  default: True
+                message:
+                  type: string
+                  description: Response message
+                data:
+                  type: array
+                  description: Response data
+                  items:
+                      type: object
+                      properties:
+                        access_token:
+                          type: string
+                        refresh_token:
+                          type: string
+                  default: []
+          429:
+            description: Too many requests. Limit in interval seconds.
+    """
     from core.oauth_settings import OAuthSignIn
 
     provider_oauth = OAuthSignIn.get_provider(provider_name=provider)

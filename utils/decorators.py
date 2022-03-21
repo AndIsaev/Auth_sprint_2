@@ -4,6 +4,7 @@ from typing import Optional, Union
 
 from flask import Response, request
 from flask_restful import abort
+from redis.exceptions import ConnectionError
 
 
 def remote_oauth_api_error_handler(func):
@@ -13,6 +14,13 @@ def remote_oauth_api_error_handler(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except ConnectionError:
+            message: dict[str, Union[str, list]] = {
+                "message": "Redis error",
+                "description": "try again later...",
+                "errors": [],
+            }
+            abort(http_status_code=http.HTTPStatus.BAD_REQUEST, message=message)
         except Exception as e:
             message: dict[str, Union[str, list]] = {
                 "message": "Oauth error",
@@ -45,10 +53,10 @@ def requires_basic_auth(func):
         # The following two lines of code wouldn't be needed in a normal
         # production environment.
         if __name__ != "__main__":
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
 
         auth = request.authorization
-        if not auth or not check_auth(username=auth.username, passqord=auth.password):
+        if not auth or not check_auth(username=auth.username, password=auth.password):
             return authenticate()
         return func(*args, **kwargs)
 

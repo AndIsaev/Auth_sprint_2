@@ -12,7 +12,7 @@ from db import db
 from models import Role, User, UserRole
 from tests.functional.settings import Settings
 from utils import constants
-
+import requests_mock
 
 @dataclass
 class HTTPResponse:
