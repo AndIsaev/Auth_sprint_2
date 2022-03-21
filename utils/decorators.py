@@ -45,10 +45,10 @@ def requires_basic_auth(func):
         # The following two lines of code wouldn't be needed in a normal
         # production environment.
         if __name__ != "__main__":
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
 
         auth = request.authorization
-        if not auth or not check_auth(username=auth.username, passqord=auth.password):
+        if not auth or not check_auth(username=auth.username, password=auth.password):
             return authenticate()
         return func(*args, **kwargs)
 
