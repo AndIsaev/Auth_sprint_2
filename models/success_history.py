@@ -16,6 +16,9 @@ def create_partition(target, connection, **kw) -> None:
         """CREATE TABLE IF NOT EXISTS "success_history_linux" PARTITION OF "success_history" FOR VALUES IN ('linux')"""
     )
     connection.execute(
+        """CREATE TABLE IF NOT EXISTS "success_history_macos" PARTITION OF "success_history" FOR VALUES IN ('macos')"""
+    )
+    connection.execute(
         """CREATE TABLE IF NOT EXISTS "success_history_other" PARTITION OF "success_history" FOR VALUES IN ('other')"""
     )
 
@@ -35,7 +38,7 @@ class SuccessHistory(CreatedUpgradeTimeMixin):
     )
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"))
     description = db.Column(db.String(length=500), nullable=False)
-    ip_address = db.Column(db.String(100))
+    ip_address = db.Column(db.String(length=100))
     user_agent = db.Column(db.Text, nullable=False)
     platform = db.Column(db.Text, primary_key=True)
     browser = db.Column(db.Text)

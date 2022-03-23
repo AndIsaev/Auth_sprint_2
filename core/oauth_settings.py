@@ -66,18 +66,16 @@ class FacebookSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            access_token_url="https://graph.facebook.com/oauth/access_token",
-            authorize_url="https://www.facebook.com/dialog/oauth",
-            api_base_url="https://graph.facebook.com/",
+            access_token_url=os.getenv("FACEBOOK_ACCESS_TOKEN_URL"),
+            authorize_url=os.getenv("FACEBOOK_AUTHORIZE_URL"),
+            api_base_url=os.getenv("FACEBOOK_API_BASE_URL"),
             client_kwargs={"scope": "email"},
         )
 
     @remote_oauth_api_error_handler
     def get_profile_data(self, request=None):
         token = self.service.authorize_access_token()
-        user_info_response = self.service.get(
-            "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
-        ).json()
+        user_info_response = self.service.get(os.getenv("FACEBOOK_PROFILE_URL")).json()
         # get user's info
         social_id: str = user_info_response.get("id")
         email: str = user_info_response.get("email")
@@ -98,7 +96,7 @@ class GoogleSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            server_metadata_url=os.getenv("GOOGLE_SERVER_METADATA_URL"),
             client_kwargs={"scope": "openid email profile"},
         )
 
@@ -126,9 +124,9 @@ class VKSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            authorize_url="https://oauth.vk.com/authorize",
+            authorize_url=os.getenv("VK_AUTHORIZE_URL"),
             scope="email",
-            base_url="https://api.vk.com/method/",
+            base_url=os.getenv("VK_API_BASE_URL"),
         )
 
     @remote_oauth_api_error_handler
@@ -136,11 +134,11 @@ class VKSignIn(OAuthSignIn):
         code: str = request.args.get("code")
         # authorize in vk
         vk_response = requests.get(
-            url="https://oauth.vk.com/access_token",
+            url=os.getenv("VK_ACCESS_TOKEN_URL"),
             params={
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
-                "redirect_uri": "http://localhost:5000/auth/vk",
+                "redirect_uri": os.getenv("VK_REDIRECT_URI"),
                 "fields": "email",
                 "code": code,
             },
@@ -165,7 +163,7 @@ class MailSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            authorize_url="https://oauth.mail.ru/login",
+            authorize_url=os.getenv("MAIL_AUTHORIZE_URL"),
             response_type="code",
             scope="userinfo",
         )
@@ -175,17 +173,17 @@ class MailSignIn(OAuthSignIn):
         code: str = request.args.get("code")
         # authorize in mail
         mail_response = requests.post(
-            url="https://oauth.mail.ru/token",
+            url=os.getenv("MAIL_TOKEN_URL"),
             params={"client_id": self.client_id, "client_secret": self.client_secret},
             data={
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": "http://localhost:5000/auth/mail",
+                "redirect_uri": os.getenv("MAIL_REDIRECT_URI"),
             },
         ).json()
         access_token: str = mail_response.get("access_token")
         user_info_response = requests.get(
-            url="https://oauth.mail.ru/userinfo", params={"access_token": access_token}
+            url=os.getenv("MAIL_PROFILE_URL"), params={"access_token": access_token}
         ).json()
         # get user's info
         social_id: str = user_info_response.get("id")
@@ -207,7 +205,7 @@ class YandexSignIn(OAuthSignIn):
             name=self.provider_name,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            authorize_url="https://oauth.yandex.ru/authorize",
+            authorize_url=os.getenv("YANDEX_AUTHORIZE_URL"),
             response_type="code",
             display="popup",
             scope="login:info login:email",
@@ -218,7 +216,7 @@ class YandexSignIn(OAuthSignIn):
         code: str = request.args.get("code")
         # authorize in yandex
         yandex_response = requests.post(
-            url="https://oauth.yandex.ru/token",
+            url=os.getenv("YANDEX_TOKEN_URL"),
             data={
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
@@ -228,7 +226,7 @@ class YandexSignIn(OAuthSignIn):
         ).json()
         access_token: str = yandex_response.get("access_token")
         user_info_response = requests.get(
-            url="https://login.yandex.ru/info",
+            url=os.getenv("YANDEX_PROFILE_URL"),
             params={
                 "format": "json",
                 "with_openid_identity": 1,
