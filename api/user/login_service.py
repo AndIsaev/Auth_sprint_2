@@ -21,7 +21,7 @@ def generate_jwt_tokens(current_user: User, request=None) -> dict[str, str]:
     )
     # put refresh token in REDIS
     jti: Union[str, Any] = jwt.decode(
-        jwt=ref_token, key=config.JWT_SECRET_KEY, algorithms="HS256"
+        jwt=ref_token, key=config.JWT_SECRET_KEY, algorithms=config.JWT_ALGORITHM
     ).get("jti")
     # add refresh token in black list
     cache.add_token(
@@ -37,6 +37,8 @@ def generate_jwt_tokens(current_user: User, request=None) -> dict[str, str]:
             platform: str = "windows"
         elif check_platform and "linux" in check_platform.lower():
             platform: str = "linux"
+        elif check_platform and "macos" in check_platform.lower():
+            platform: str = "macos"
         else:
             platform: str = "other"
         history = SuccessHistory(

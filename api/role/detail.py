@@ -26,7 +26,6 @@ def return_or_abort_if_role_not_exist(role_id: str) -> Role:
 class RoleDetail(Resource):
     @rate_limit()
     @api_response_wrapper()
-    @jwt_required()
     def get(self, role_id):
         """
         Return detail of specific role by role_id
@@ -67,27 +66,6 @@ class RoleDetail(Resource):
                           type: string
                           default: 2022-02-27 14:12
                   default: []
-          401:
-            description: Authorization error response
-            schema:
-              properties:
-                success:
-                  type: boolean
-                  description: Response status
-                  default: False
-                errors:
-                  type: array
-                  description: Data with error validation messages
-                  items:
-                    type: object
-                    default: ...
-                  default: []
-                description:
-                  type: string
-                  description: Response description
-                message:
-                  type: string
-                  description: Response message
           429:
             description: Too many requests. Limit in interval seconds.
         """

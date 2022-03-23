@@ -1,5 +1,7 @@
 import http
+
 import pytest
+
 from core.oauth_service import register_social_account
 
 pytestmark = pytest.mark.asyncio

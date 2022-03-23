@@ -7,6 +7,7 @@ load_dotenv()
 
 SECRET_KEY: str = os.getenv("SECRET_KEY")
 JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
 JWT_BLACKLIST_ENABLED: bool = True
 JWT_COOKIE_SECURE: bool = False
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
