@@ -25,13 +25,13 @@ def create_partition(target, connection, **kw) -> None:
 
 class SuccessHistory(CreatedUpgradeTimeMixin):
     __tablename__ = "success_history"
-    __table_args__ = (
-        UniqueConstraint("id", "platform"),
-        {
-            "postgresql_partition_by": "LIST (platform)",
-            "listeners": [("after_create", create_partition)],
-        },
-    )
+    # __table_args__ = (
+    #     UniqueConstraint("id", "platform"),
+    #     {
+    #         "postgresql_partition_by": "LIST (platform)",
+    #         "listeners": [("after_create", create_partition)],
+    #     },
+    # )
 
     id = db.Column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False

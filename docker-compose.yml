@@ -19,7 +19,7 @@ services:
       - POSTGRES_PASSWORD=auth_sprint
       - POSTGRES_DB=auth_sprint_test
     volumes:
-      - ../postgres_data:/var/lib/postgresql/data/
+      - ./postgres_data:/var/lib/postgresql/data/
     networks:
       - auth_network
     ports:
@@ -52,6 +52,21 @@ services:
       - auth_network
     depends_on:
       - flask_app
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: jaeger
+    ports:
+      - '6831:6831'
+      - '16686:16686'
+      - '14268:14268'
+      - '5778:5778'
+      - '6832:6832'
+    restart: unless-stopped
+    networks:
+      - auth_network
+    depends_on:
+      - nginx
 
 networks:
   auth_network:
