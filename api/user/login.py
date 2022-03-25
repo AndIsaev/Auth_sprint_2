@@ -9,7 +9,6 @@ from utils.rate_limit import rate_limit
 
 from .login_service import generate_jwt_tokens
 
-
 parser = reqparse.RequestParser()
 parser.add_argument("email", help="This field cannot be blank", required=True)
 parser.add_argument("password", help="This field cannot be blank", required=True)

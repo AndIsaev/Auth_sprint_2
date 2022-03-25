@@ -10,6 +10,11 @@ from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_restful import Api
+from opentelemetry import trace
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 
 import core.config
 from core import config
@@ -18,16 +23,6 @@ from models import Role, User, UserRole
 from utils import constants
 from utils.decorators import requires_basic_auth
 from utils.rate_limit import rate_limit
-
-from opentelemetry import trace
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor,
-    ConsoleSpanExporter,
-)
-
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -51,7 +46,7 @@ tracer = trace.get_tracer(__name__)
 
 @rate_limit()
 @app.route("/login/<provider>/")
-def google(provider: str):
+def provider_login(provider: str):
     """
     Retdirect user for internal oauth service of social network
     ---
@@ -137,7 +132,7 @@ swagger = Swagger(
                 "name": "Authorization",
                 "in": "header",
                 "description": 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {'
-                               'token}"',
+                'token}"',
             }
         },
         "security": [{"Bearer": []}],

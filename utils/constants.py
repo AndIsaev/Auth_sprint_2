@@ -1,3 +1,14 @@
+from enum import Enum
+
+
+class OAUTH_SERVICES(Enum):
+    facebook: str = "facebook"
+    google: str = "google"
+    vk: str = "vk"
+    mail: str = "mail"
+    yandex: str = "yandex"
+
+
 DEFAULT_ROLE_FOR_ALL_USERS: str = "simple_user"
 ROLE_FOR_ADMIN: str = "admin"
 
