@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import url_for
 
 from app import oauth
+from utils.constants import OAUTH_SERVICES
 from utils.decorators import remote_oauth_api_error_handler
 
 from .oauth_service import register_social_account
@@ -61,7 +62,7 @@ class OAuthSignIn(object):
 
 class FacebookSignIn(OAuthSignIn):
     def __init__(self):
-        super(FacebookSignIn, self).__init__(provider_name="facebook")
+        super(FacebookSignIn, self).__init__(provider_name=OAUTH_SERVICES.facebook)
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
@@ -91,7 +92,7 @@ class FacebookSignIn(OAuthSignIn):
 
 class GoogleSignIn(OAuthSignIn):
     def __init__(self):
-        super(GoogleSignIn, self).__init__(provider_name="google")
+        super(GoogleSignIn, self).__init__(provider_name=OAUTH_SERVICES.google)
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
@@ -119,7 +120,7 @@ class GoogleSignIn(OAuthSignIn):
 
 class VKSignIn(OAuthSignIn):
     def __init__(self):
-        super(VKSignIn, self).__init__(provider_name="vk")
+        super(VKSignIn, self).__init__(provider_name=OAUTH_SERVICES.vk)
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
@@ -158,7 +159,7 @@ class VKSignIn(OAuthSignIn):
 
 class MailSignIn(OAuthSignIn):
     def __init__(self):
-        super(MailSignIn, self).__init__(provider_name="mail")
+        super(MailSignIn, self).__init__(provider_name=OAUTH_SERVICES.mail)
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
@@ -200,7 +201,7 @@ class MailSignIn(OAuthSignIn):
 
 class YandexSignIn(OAuthSignIn):
     def __init__(self):
-        super(YandexSignIn, self).__init__(provider_name="yandex")
+        super(YandexSignIn, self).__init__(provider_name=OAUTH_SERVICES.yandex)
         self.service = oauth.register(
             name=self.provider_name,
             client_id=self.client_id,
