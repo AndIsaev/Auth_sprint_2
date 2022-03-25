@@ -4,6 +4,7 @@ from http.client import HTTPResponse
 
 import aiohttp
 import pytest
+import requests_mock
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
 from multidict import CIMultiDictProxy
 

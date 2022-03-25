@@ -7,7 +7,11 @@ from models import SocialAccount, User, UserRole
 
 
 def register_social_account(
-    request, social_name: str, social_id: str, email: str, username: str
+    social_name: str,
+    social_id: str,
+    email: str,
+    username: str,
+    request: "Request" = None,
 ) -> tuple[dict[str, str], int]:
     # search user in db by email
     current_user = User.find_by_email(email=email)

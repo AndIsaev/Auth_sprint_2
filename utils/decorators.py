@@ -4,6 +4,7 @@ from typing import Optional, Union
 
 from flask import Response, request
 from flask_restful import abort
+from redis.exceptions import ConnectionError
 
 
 def remote_oauth_api_error_handler(func):
@@ -13,6 +14,13 @@ def remote_oauth_api_error_handler(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except ConnectionError:
+            message: dict[str, Union[str, list]] = {
+                "message": "Redis error",
+                "description": "try again later...",
+                "errors": [],
+            }
+            abort(http_status_code=http.HTTPStatus.BAD_REQUEST, message=message)
         except Exception as e:
             message: dict[str, Union[str, list]] = {
                 "message": "Oauth error",
