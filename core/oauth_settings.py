@@ -35,8 +35,8 @@ class OAuthSignIn(object):
     providers = None
 
     def __init__(self, provider_name: str):
-        self.provider_name: str = provider_name
-        credentials: dict[str, str] = OAUTH_CREDENTIALS.get(provider_name)
+        self.provider_name: str = provider_name.value
+        credentials: dict[str, str] = OAUTH_CREDENTIALS.get(provider_name.value)
         self.client_id: str = credentials.get("id")
         self.client_secret: str = credentials.get("secret")
         self.service = None
@@ -62,6 +62,7 @@ class OAuthSignIn(object):
 
 class FacebookSignIn(OAuthSignIn):
     def __init__(self):
+        print(OAUTH_SERVICES.facebook)
         super(FacebookSignIn, self).__init__(provider_name=OAUTH_SERVICES.facebook)
         self.service = oauth.register(
             name=self.provider_name,
