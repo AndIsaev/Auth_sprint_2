@@ -1,0 +1,73 @@
+
+services:
+  redis:
+    image: docker.io/bitnami/redis:5.0.14
+    container_name: redis
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    networks:
+      - api_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - api_network
+    ports:
+      - "9200:9200"
+
+  postgres_etl:
+    image: postgres:13.3-alpine
+    container_name: postgres_etl
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - envs/postgres.env
+    networks:
+      - api_network
+    ports:
+      - "5432:5432"
+
+  fastapi:
+    container_name: fastapi
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    env_file:
+      - envs/fastapi.env
+    networks:
+      - api_network
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - elasticsearch
+
+  etl:
+    container_name: etl
+    volumes:
+      - etl_logs:/usr/src/app/logs/
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    env_file:
+      - envs/etl.env
+    networks:
+      - api_network
+    depends_on:
+      - elasticsearch
+      - postgres_etl
+
+networks:
+  api_network:
+
+volumes:
+  postgres_data:
+  etl_logs:
